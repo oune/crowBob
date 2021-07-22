@@ -47,25 +47,38 @@ def get_meal(dorm_name):
     dorm_url = get_dorm_url(dorm_name)
     soup = get_dorm_soup(dorm_url)
     html = clean_soup(soup)
-    res = pd.read_html(html)[0]
+    meal = pd.read_html(html)[0]
 
-    return res
+    return meal
+
+
+def parse_to_json(pd):
+    pd.index = ["점심", "저녁"]
+    encode = pd.to_json(orient='columns').encode('utf8')
+    parsed = json.loads(encode, encoding="utf-8")
+    return parsed
+
+
+def get_meal_json(dorm_name):
+    meal = get_meal(dorm_name)
+    json = parse_to_json(meal)
+    return json
 
 
 app = Flask(__name__)
 
 
-@app.route("/푸름관")
+@app.route("/p")
 def pu():
-    return get_meal("푸름관").to_html()
+    return get_meal_json("푸름관")
 
 
-@app.route("/오름관1동")
+@app.route("/o1")
 def oh1():
     return get_meal("오름관1동").to_html()
 
 
-@app.route("/오름관3동")
+@app.route("/o3")
 def oh3():
     return get_meal("오름관3동").to_html()
 
