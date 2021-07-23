@@ -1,5 +1,5 @@
 # 사용할 라이브러리 import
-from flask import Flask
+from flask import Flask, request
 from bs4 import BeautifulSoup
 import requests
 from tqdm import tqdm
@@ -54,13 +54,16 @@ def get_meal(dorm_name):
 
 def parse_to_json(pd):
     pd.index = ["점심", "저녁"]
-    encode = pd.to_json(orient='columns').encode('utf8')
-    parsed = json.loads(encode, encoding="utf-8")
+    pd.columns = [column[3:-1] for column in pd.columns]
+    res = pd.to_json(orient='columns').encode('utf8')
+    parsed = json.loads(res, encoding="utf-8")
     return parsed
 
 
 def get_meal_json(dorm_name):
     meal = get_meal(dorm_name)
+    if meal.empty:
+        return {"text": "식단 데이터가 존재하지 않습니다."}
     json = parse_to_json(meal)
     return json
 
@@ -68,19 +71,16 @@ def get_meal_json(dorm_name):
 app = Flask(__name__)
 
 
-@app.route("/p")
-def pu():
-    return get_meal_json("푸름관")
+@app.route("/meals")
+def meal():
+    name = request.args.get('name')
 
-
-@app.route("/o1")
-def oh1():
-    return get_meal("오름관1동").to_html()
-
-
-@app.route("/o3")
-def oh3():
-    return get_meal("오름관3동").to_html()
+    if name == "pu":
+        return get_meal_json("푸름관")
+    elif name == "oh1":
+        return get_meal_json("오름관1동")
+    elif name == "oh3":
+        return get_meal_json("오름관3동")
 
 
 if __name__ == "__main__":
